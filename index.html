@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>库存管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .stat-item {
+            background: rgba(255,255,255,0.2);
+            padding: 15px 20px;
+            border-radius: 8px;
+            text-align: center;
+            flex: 1;
+            min-width: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .stat-item .number {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .stat-item .label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border: none;
+        }
+        .tab {
+            flex: 1;
+            padding: 20px 8px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: white;
+            font-size: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            color: #999;
+            font-weight: 500;
+        }
+        .tab-icon {
+            font-size: 28px;
+            filter: grayscale(100%);
+            opacity: 0.6;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+            transform: translateY(-2px);
+        }
+        .tab.active .tab-icon {
+            filter: grayscale(0%);
+            opacity: 1;
+            transform: scale(1.1);
+        }
+        .tab:hover:not(.active) {
+            background: #f5f7ff;
+            color: #667eea;
+        }
+        .tab:hover:not(.active) .tab-icon {
+            filter: grayscale(0%);
+            opacity: 0.8;
+        }
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+        .search-box {
+            margin-bottom: 15px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .product-list {
+            display: grid;
+            gap: 15px;
+        }
+        .product-card {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 4px solid #667eea;
+        }
+        .product-card.low-stock {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+        .product-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .product-name {
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .product-spec {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .product-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .product-quantity {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .product-quantity.low {
+            color: #dc3545;
+        }
+        .product-category {
+            background: #e9ecef;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+        .product-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .category-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+        }
+        .category-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            font-weight: 500;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .category-tag::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+            pointer-events: none;
+        }
+        .category-tag:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.35);
+        }
+        .category-tag .delete {
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 18px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+        .category-tag .delete:hover {
+            background: rgba(220, 53, 69, 0.9);
+            transform: rotate(90deg);
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+        }
+        .alert-list {
+            margin-top: 20px;
+            display: grid;
+            gap: 12px;
+        }
+        .alert-item {
+            background: white;
+            border-left: 5px solid #dc3545;
+            padding: 16px 20px;
+            margin-bottom: 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .alert-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.15);
+        }
+        .alert-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            gap: 12px;
+        }
+        .alert-item-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+            flex: 1;
+        }
+        .alert-item-category {
+            background: #ffebee;
+            color: #c62828;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .alert-item-spec {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .alert-item-stock {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+        .alert-item-current {
+            font-size: 18px;
+            font-weight: 700;
+            color: #dc3545;
+        }
+        .alert-item-threshold {
+            color: #999;
+            font-size: 13px;
+        }
+        .alert-item-threshold span {
+            color: #666;
+            font-weight: 500;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-header h2 {
+            font-size: 20px;
+        }
+        .close {
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+        }
+        .close:hover {
+            color: #333;
+        }
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        .stock-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .stock-input input {
+            width: 100px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        .category-filter-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .category-filter-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: 500;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            text-align: center;
+            min-height: 60px;
+        }
+        .category-filter-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.35);
+        }
+        .category-filter-item.active {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+        .category-filter-item.all {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+            min-width: 300px;
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        .toast.success {
+            border-left: 4px solid #28a745;
+        }
+        .toast.success .toast-icon {
+            color: #28a745;
+        }
+        .toast.error {
+            border-left: 4px solid #dc3545;
+        }
+        .toast.error .toast-icon {
+            color: #dc3545;
+        }
+        .toast-icon {
+            font-size: 24px;
+        }
+        .toast-message {
+            font-size: 15px;
+            color: #333;
+            font-weight: 500;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            .header h1 {
+                font-size: 20px;
+            }
+            .stats {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            .stat-item {
+                padding: 12px;
+                min-width: auto;
+            }
+            .stat-item .number {
+                font-size: 20px;
+            }
+            .stat-item .label {
+                font-size: 11px;
+            }
+            .tabs {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+                padding: 8px;
+            }
+            .tab {
+                padding: 16px 4px;
+                font-size: 10px;
+                border-radius: 12px;
+                min-height: 80px;
+                gap: 6px;
+            }
+            .tab-icon {
+                font-size: 24px;
+            }
+            .product-actions {
+                flex-direction: column;
+            }
+            .product-actions .btn {
+                width: 100%;
+            }
+            .category-list {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            .category-tag {
+                padding: 14px 16px;
+                font-size: 13px;
+            }
+            .category-tag .delete {
+                width: 26px;
+                height: 26px;
+                font-size: 16px;
+            }
+            .category-filter-list {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            .category-filter-item {
+                padding: 14px 12px;
+                font-size: 13px;
+                min-height: 55px;
+            }
+            .alert-item {
+                padding: 14px 16px;
+            }
+            .alert-item-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .alert-item-name {
+                font-size: 15px;
+            }
+            .alert-item-spec {
+                font-size: 13px;
+                margin-bottom: 8px;
+                padding-bottom: 8px;
+            }
+            .data-management {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            .data-section {
+                background: white;
+                padding: 16px;
+                border-radius: 10px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            }
+            .data-section h3 {
+                margin: 0 0 10px 0;
+                font-size: 16px;
+                color: #333;
+            }
+            .data-section .btn {
+                width: 100%;
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📦 库存管理系统</h1>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="number" id="totalProducts">0</div>
+                    <div class="label">货品总数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number" id="totalStock">0</div>
+                    <div class="label">库存总量</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number" id="lowStockCount">0</div>
+                    <div class="label">低库存</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number" id="totalCategories">0</div>
+                    <div class="label">品类数量</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('inventory')">
+                <span class="tab-icon">📋</span>
+                <span>库存查询</span>
+            </button>
+            <button class="tab" onclick="switchTab('add')">
+                <span class="tab-icon">➕</span>
+                <span>添加货品</span>
+            </button>
+            <button class="tab" onclick="switchTab('categories')">
+                <span class="tab-icon">📁</span>
+                <span>品类管理</span>
+            </button>
+            <button class="tab" onclick="switchTab('alerts')">
+                <span class="tab-icon">⚠️</span>
+                <span>低库存预警</span>
+            </button>
+            <button class="tab" onclick="switchTab('data')">
+                <span class="tab-icon">💾</span>
+                <span>数据管理</span>
+            </button>
+        </div>
+
+        <div id="inventory" class="tab-content active">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜索货品名称或规格..." oninput="searchProducts()">
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary" style="width: 100%;" onclick="openCategoryFilterModal()">
+                    <span id="selectedCategoryText">所有品类</span>
+                    <span style="float: right;">▼</span>
+                </button>
+            </div>
+            <div id="productList" class="product-list"></div>
+        </div>
+
+        <div id="add" class="tab-content">
+            <h2>添加新货品</h2>
+            <div class="form-group">
+                <label>货品名称</label>
+                <input type="text" id="productName" placeholder="请输入货品名称">
+            </div>
+            <div class="form-group">
+                <label>规格</label>
+                <input type="text" id="productSpec" placeholder="例如：500ml、红色、XL等">
+            </div>
+            <div class="form-group">
+                <label>品类</label>
+                <button class="btn btn-primary" style="width: 100%;" onclick="openProductCategoryModal()">
+                    <span id="selectedProductCategoryText">请选择品类</span>
+                    <span style="float: right;">▼</span>
+                </button>
+                <input type="hidden" id="productCategory">
+            </div>
+            <div class="form-group">
+                <label>初始数量</label>
+                <input type="number" id="productQuantity" placeholder="请输入初始数量" min="0">
+            </div>
+            <div class="form-group">
+                <label>低库存预警值</label>
+                <input type="number" id="productAlert" placeholder="低于此数量时预警" min="0">
+            </div>
+            <button class="btn btn-primary" onclick="addProduct()">添加货品</button>
+        </div>
+
+        <div id="categories" class="tab-content">
+            <h2>品类管理</h2>
+            <div class="form-group">
+                <label>添加新品类</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="newCategory" placeholder="请输入品类名称">
+                    <button class="btn btn-primary" onclick="addCategory()">添加</button>
+                </div>
+            </div>
+            <div id="categoryList" class="category-list"></div>
+        </div>
+
+        <div id="alerts" class="tab-content">
+            <h2>低库存预警</h2>
+            <div id="alertList" class="alert-list"></div>
+        </div>
+
+        <div id="data" class="tab-content">
+            <h2>数据管理</h2>
+            <div class="data-management">
+                <div class="data-section">
+                    <h3>导出数据</h3>
+                    <p style="color: #666; font-size: 14px; margin-bottom: 15px;">将数据导出为 JSON 文件，备份到本地</p>
+                    <button class="btn btn-primary" onclick="exportData()">📥 导出数据</button>
+                </div>
+                <div class="data-section">
+                    <h3>导入数据</h3>
+                    <p style="color: #666; font-size: 14px; margin-bottom: 15px;">从 JSON 文件导入数据，恢复备份</p>
+                    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+                    <button class="btn btn-success" onclick="document.getElementById('importFile').click()">📤 导入数据</button>
+                </div>
+                <div class="data-section">
+                    <h3>清除数据</h3>
+                    <p style="color: #666; font-size: 14px; margin-bottom: 15px;">清除所有本地存储的数据</p>
+                    <button class="btn btn-danger" onclick="clearAllData()">🗑️ 清除数据</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>编辑货品</h2>
+                <span class="close" onclick="closeModal('editModal')">&times;</span>
+            </div>
+            <input type="hidden" id="editProductId">
+            <div class="form-group">
+                <label>货品名称</label>
+                <input type="text" id="editProductName">
+            </div>
+            <div class="form-group">
+                <label>规格</label>
+                <input type="text" id="editProductSpec">
+            </div>
+            <div class="form-group">
+                <label>品类</label>
+                <button class="btn btn-primary" style="width: 100%;" onclick="openEditCategoryModal()">
+                    <span id="selectedEditCategoryText">请选择品类</span>
+                    <span style="float: right;">▼</span>
+                </button>
+                <input type="hidden" id="editProductCategory">
+            </div>
+            <div class="form-group">
+                <label>数量</label>
+                <input type="number" id="editProductQuantity" min="0">
+            </div>
+            <div class="form-group">
+                <label>低库存预警值</label>
+                <input type="number" id="editProductAlert" min="0">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="saveEdit()">保存</button>
+                <button class="btn" onclick="closeModal('editModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="stockModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="stockModalTitle">库存操作</h2>
+                <span class="close" onclick="closeModal('stockModal')">&times;</span>
+            </div>
+            <input type="hidden" id="stockProductId">
+            <input type="hidden" id="stockOperation">
+            <div class="form-group">
+                <label id="stockLabel">操作数量</label>
+                <div class="stock-input">
+                    <input type="number" id="stockAmount" min="1" value="1">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="confirmStockOperation()">确认</button>
+                <button class="btn" onclick="closeModal('stockModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="categoryFilterModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>选择品类</h2>
+                <span class="close" onclick="closeModal('categoryFilterModal')">&times;</span>
+            </div>
+            <div id="categoryFilterList" class="category-filter-list"></div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeModal('categoryFilterModal')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="productCategoryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>选择品类</h2>
+                <span class="close" onclick="closeModal('productCategoryModal')">&times;</span>
+            </div>
+            <div id="productCategoryList" class="category-filter-list"></div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeModal('productCategoryModal')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editCategoryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>选择品类</h2>
+                <span class="close" onclick="closeModal('editCategoryModal')">&times;</span>
+            </div>
+            <div id="editCategoryList" class="category-filter-list"></div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeModal('editCategoryModal')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">
+        <span class="toast-icon"></span>
+        <span class="toast-message"></span>
+    </div>
+
+    <script>
+        let products = [];
+        let categories = [];
+        let selectedCategoryFilter = '';
+
+        function init() {
+            loadData();
+            renderProducts();
+            renderCategories();
+            renderAlerts();
+            updateStats();
+        }
+
+        function loadData() {
+            const savedProducts = localStorage.getItem('inventory_products');
+            const savedCategories = localStorage.getItem('inventory_categories');
+            if (savedProducts) {
+                products = JSON.parse(savedProducts);
+            }
+            if (savedCategories) {
+                categories = JSON.parse(savedCategories);
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('inventory_products', JSON.stringify(products));
+            localStorage.setItem('inventory_categories', JSON.stringify(categories));
+        }
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = toast.querySelector('.toast-icon');
+            const msg = toast.querySelector('.toast-message');
+            
+            toast.className = 'toast ' + type;
+            icon.textContent = type === 'success' ? '✓' : '✕';
+            msg.textContent = message;
+            
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            if (tabName === 'alerts') {
+                renderAlerts();
+            }
+        }
+
+        function addProduct() {
+            const name = document.getElementById('productName').value.trim();
+            const spec = document.getElementById('productSpec').value.trim();
+            const category = document.getElementById('productCategory').value;
+            const quantity = parseInt(document.getElementById('productQuantity').value) || 0;
+            const alert = parseInt(document.getElementById('productAlert').value) || 10;
+
+            if (!name) {
+                showToast('请输入货品名称', 'error');
+                return;
+            }
+
+            // 检查是否已存在相同名称的货品
+            if (products.some(p => p.name === name)) {
+                showToast('已存在相同名称的货品，请使用不同的名称', 'error');
+                return;
+            }
+
+            const product = {
+                id: generateId(),
+                name,
+                spec,
+                category,
+                quantity,
+                alert,
+                createdAt: new Date().toISOString()
+            };
+
+            products.push(product);
+            saveData();
+            renderProducts();
+            updateStats();
+            
+            document.getElementById('productName').value = '';
+            document.getElementById('productSpec').value = '';
+            document.getElementById('productQuantity').value = '';
+            document.getElementById('productAlert').value = '';
+            
+            showToast('货品添加成功！');
+            switchTab('inventory');
+        }
+
+        function renderProducts(filter = '') {
+            const container = document.getElementById('productList');
+            let filteredProducts = products;
+
+            if (filter) {
+                filteredProducts = products.filter(p => 
+                    p.name.toLowerCase().includes(filter.toLowerCase()) ||
+                    p.spec.toLowerCase().includes(filter.toLowerCase())
+                );
+            }
+
+            if (selectedCategoryFilter) {
+                filteredProducts = filteredProducts.filter(p => p.category === selectedCategoryFilter);
+            }
+
+            if (filteredProducts.length === 0) {
+                container.innerHTML = '<div class="empty-state">暂无货品数据</div>';
+                return;
+            }
+
+            container.innerHTML = filteredProducts.map(product => {
+                const isLowStock = product.quantity <= product.alert;
+                const categoryName = categories.find(c => c.id === product.category)?.name || '未分类';
+                return `
+                    <div class="product-card ${isLowStock ? 'low-stock' : ''}">
+                        <div class="product-card-header">
+                            <span class="product-name">${product.name}</span>
+                            <span class="product-category">${categoryName}</span>
+                        </div>
+                        <div class="product-spec">${product.spec || '无规格'}</div>
+                        <div class="product-info">
+                            <span class="product-quantity ${isLowStock ? 'low' : ''}">数量: ${product.quantity}</span>
+                            <span style="font-size: 12px; color: #999;">预警值: ${product.alert}</span>
+                        </div>
+                        <div class="product-actions">
+                            <button class="btn btn-success btn-small" onclick="openStockModal('${product.id}', 'in')">入库</button>
+                            <button class="btn btn-warning btn-small" onclick="openStockModal('${product.id}', 'out')">出库</button>
+                            <button class="btn btn-primary btn-small" onclick="openEditModal('${product.id}')">编辑</button>
+                            <button class="btn btn-danger btn-small" onclick="deleteProduct('${product.id}')">删除</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function searchProducts() {
+            const filter = document.getElementById('searchInput').value;
+            renderProducts(filter);
+        }
+
+        function openCategoryFilterModal() {
+            const container = document.getElementById('categoryFilterList');
+            container.innerHTML = `
+                <div class="category-filter-item all ${!selectedCategoryFilter ? 'active' : ''}" onclick="selectCategoryFilter('')">
+                    所有品类
+                </div>
+                ${categories.map(c => `
+                    <div class="category-filter-item ${selectedCategoryFilter === c.id ? 'active' : ''}" onclick="selectCategoryFilter('${c.id}')">
+                        ${c.name}
+                    </div>
+                `).join('')}
+            `;
+            document.getElementById('categoryFilterModal').classList.add('active');
+        }
+
+        function selectCategoryFilter(categoryId) {
+            selectedCategoryFilter = categoryId;
+            const categoryName = categoryId ? categories.find(c => c.id === categoryId)?.name : '所有品类';
+            document.getElementById('selectedCategoryText').textContent = categoryName;
+            renderProducts(document.getElementById('searchInput').value);
+            closeModal('categoryFilterModal');
+        }
+
+        function openProductCategoryModal() {
+            const container = document.getElementById('productCategoryList');
+            const selectedCategoryId = document.getElementById('productCategory').value;
+            container.innerHTML = categories.map(c => `
+                <div class="category-filter-item ${selectedCategoryId === c.id ? 'active' : ''}" onclick="selectProductCategory('${c.id}')">
+                    ${c.name}
+                </div>
+            `).join('');
+            document.getElementById('productCategoryModal').classList.add('active');
+        }
+
+        function selectProductCategory(categoryId) {
+            document.getElementById('productCategory').value = categoryId;
+            const categoryName = categories.find(c => c.id === categoryId)?.name || '请选择品类';
+            document.getElementById('selectedProductCategoryText').textContent = categoryName;
+            closeModal('productCategoryModal');
+        }
+
+        function openEditModal(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            document.getElementById('editProductId').value = productId;
+            document.getElementById('editProductName').value = product.name;
+            document.getElementById('editProductSpec').value = product.spec;
+            document.getElementById('editProductQuantity').value = product.quantity;
+            document.getElementById('editProductAlert').value = product.alert;
+            document.getElementById('editProductCategory').value = product.category || '';
+            
+            const categoryName = product.category ? categories.find(c => c.id === product.category)?.name : '未分类';
+            document.getElementById('selectedEditCategoryText').textContent = categoryName;
+
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        function openEditCategoryModal() {
+            const container = document.getElementById('editCategoryList');
+            const selectedCategoryId = document.getElementById('editProductCategory').value;
+            container.innerHTML = `
+                <div class="category-filter-item ${!selectedCategoryId ? 'active' : ''}" onclick="selectEditCategory('')">
+                    未分类
+                </div>
+                ${categories.map(c => `
+                    <div class="category-filter-item ${selectedCategoryId === c.id ? 'active' : ''}" onclick="selectEditCategory('${c.id}')">
+                        ${c.name}
+                    </div>
+                `).join('')}
+            `;
+            document.getElementById('editCategoryModal').classList.add('active');
+        }
+
+        function selectEditCategory(categoryId) {
+            document.getElementById('editProductCategory').value = categoryId;
+            const categoryName = categoryId ? categories.find(c => c.id === categoryId)?.name : '未分类';
+            document.getElementById('selectedEditCategoryText').textContent = categoryName;
+            closeModal('editCategoryModal');
+        }
+
+        function saveEdit() {
+            const productId = document.getElementById('editProductId').value;
+            const productIndex = products.findIndex(p => p.id === productId);
+            
+            if (productIndex === -1) return;
+
+            const newName = document.getElementById('editProductName').value.trim();
+            
+            // 检查是否与其他货品名称重复
+            if (products.some(p => p.id !== productId && p.name === newName)) {
+                showToast('已存在相同名称的货品，请使用不同的名称', 'error');
+                return;
+            }
+
+            products[productIndex] = {
+                ...products[productIndex],
+                name: newName,
+                spec: document.getElementById('editProductSpec').value.trim(),
+                category: document.getElementById('editProductCategory').value,
+                quantity: parseInt(document.getElementById('editProductQuantity').value) || 0,
+                alert: parseInt(document.getElementById('editProductAlert').value) || 10
+            };
+
+            saveData();
+            renderProducts();
+            updateStats();
+            closeModal('editModal');
+            showToast('货品信息已更新！');
+        }
+
+        function deleteProduct(productId) {
+            if (!confirm('确定要删除这个货品吗？')) return;
+            
+            products = products.filter(p => p.id !== productId);
+            saveData();
+            renderProducts();
+            updateStats();
+            showToast('货品已删除！');
+        }
+
+        function openStockModal(productId, operation) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            document.getElementById('stockProductId').value = productId;
+            document.getElementById('stockOperation').value = operation;
+            document.getElementById('stockAmount').value = 1;
+            
+            if (operation === 'in') {
+                document.getElementById('stockModalTitle').textContent = `入库 - ${product.name}`;
+                document.getElementById('stockLabel').textContent = '入库数量';
+            } else {
+                document.getElementById('stockModalTitle').textContent = `出库 - ${product.name}`;
+                document.getElementById('stockLabel').textContent = '出库数量';
+            }
+
+            document.getElementById('stockModal').classList.add('active');
+        }
+
+        function confirmStockOperation() {
+            const productId = document.getElementById('stockProductId').value;
+            const operation = document.getElementById('stockOperation').value;
+            const amount = parseInt(document.getElementById('stockAmount').value) || 0;
+
+            if (amount <= 0) {
+                showToast('请输入有效的数量', 'error');
+                return;
+            }
+
+            const productIndex = products.findIndex(p => p.id === productId);
+            if (productIndex === -1) return;
+
+            if (operation === 'in') {
+                products[productIndex].quantity += amount;
+            } else {
+                if (products[productIndex].quantity < amount) {
+                    showToast('库存不足！', 'error');
+                    return;
+                }
+                products[productIndex].quantity -= amount;
+            }
+
+            saveData();
+            renderProducts();
+            updateStats();
+            closeModal('stockModal');
+            showToast(operation === 'in' ? '入库成功！' : '出库成功！');
+        }
+
+        function addCategory() {
+            const name = document.getElementById('newCategory').value.trim();
+            if (!name) {
+                showToast('请输入品类名称', 'error');
+                return;
+            }
+
+            if (categories.some(c => c.name === name)) {
+                showToast('该品类已存在', 'error');
+                return;
+            }
+
+            categories.push({
+                id: generateId(),
+                name,
+                createdAt: new Date().toISOString()
+            });
+
+            saveData();
+            renderCategories();
+            updateStats();
+            
+            document.getElementById('newCategory').value = '';
+            showToast('品类添加成功！');
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categoryList');
+            
+            if (categories.length === 0) {
+                container.innerHTML = '<div class="empty-state">暂无品类数据</div>';
+                return;
+            }
+
+            container.innerHTML = categories.map(category => `
+                <div class="category-tag">
+                    <span>${category.name}</span>
+                    <span class="delete" onclick="deleteCategory('${category.id}')">&times;</span>
+                </div>
+            `).join('');
+        }
+
+        function deleteCategory(categoryId) {
+            if (!confirm('确定要删除这个品类吗？删除后，使用该品类的货品将变为未分类。')) return;
+            
+            categories = categories.filter(c => c.id !== categoryId);
+            products.forEach(p => {
+                if (p.category === categoryId) {
+                    p.category = '';
+                }
+            });
+
+            saveData();
+            renderCategories();
+            renderProducts();
+            updateStats();
+            showToast('品类已删除！');
+        }
+
+        function renderAlerts() {
+            const container = document.getElementById('alertList');
+            const lowStockProducts = products.filter(p => p.quantity <= p.alert);
+
+            if (lowStockProducts.length === 0) {
+                container.innerHTML = '<div class="empty-state">没有低库存预警</div>';
+                return;
+            }
+
+            container.innerHTML = lowStockProducts.map(product => {
+                const categoryName = categories.find(c => c.id === product.category)?.name || '未分类';
+                return `
+                    <div class="alert-item">
+                        <div class="alert-item-header">
+                            <span class="alert-item-name">${product.name}</span>
+                            <span class="alert-item-category">${categoryName}</span>
+                        </div>
+                        <div class="alert-item-spec">${product.spec || '无规格'}</div>
+                        <div class="alert-item-stock">
+                            <span class="alert-item-current">当前库存: ${product.quantity}</span>
+                            <span class="alert-item-threshold">预警值: <span>${product.alert}</span></span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateStats() {
+            document.getElementById('totalProducts').textContent = products.length;
+            document.getElementById('totalStock').textContent = products.reduce((sum, p) => sum + p.quantity, 0);
+            document.getElementById('lowStockCount').textContent = products.filter(p => p.quantity <= p.alert).length;
+            document.getElementById('totalCategories').textContent = categories.length;
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function exportData() {
+            const data = {
+                products: products,
+                categories: categories,
+                exportDate: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `inventory_backup_${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            showToast('数据导出成功！');
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (!data.products || !data.categories) {
+                        showToast('文件格式不正确', 'error');
+                        return;
+                    }
+                    
+                    if (!confirm('导入数据将覆盖现有数据，确定要继续吗？')) {
+                        return;
+                    }
+                    
+                    products = data.products;
+                    categories = data.categories;
+                    
+                    saveData();
+                    renderProducts();
+                    renderCategories();
+                    renderAlerts();
+                    updateStats();
+                    
+                    document.getElementById('importFile').value = '';
+                    showToast('数据导入成功！');
+                } catch (error) {
+                    showToast('文件解析失败，请检查文件格式', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function clearAllData() {
+            if (!confirm('确定要清除所有数据吗？此操作不可恢复！')) {
+                return;
+            }
+            
+            products = [];
+            categories = [];
+            
+            localStorage.removeItem('inventory_products');
+            localStorage.removeItem('inventory_categories');
+            
+            renderProducts();
+            renderCategories();
+            renderAlerts();
+            updateStats();
+            
+            showToast('数据已清除！');
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
